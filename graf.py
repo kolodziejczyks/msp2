@@ -1,8 +1,6 @@
 import asyncio
 from playwright.async_api import async_playwright
-import pytesseract
 import cv2
-import numpy as np
 import json
 
 async def take_and_read(page, path):
