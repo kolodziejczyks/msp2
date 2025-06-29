@@ -2,14 +2,20 @@ import asyncio
 from playwright.async_api import async_playwright
 import cv2
 import json
+import argparse
+# import numpy
 
 async def take_and_read(page, path):
     await page.screenshot(path=path)
     return cv2.imread(path)
 
 async def main():
-    with open('credentials.json') as f:
-        creds = json.load(f)
+    parser = argparse.ArgumentParser(description='Script for giving grafs like a boss')
+    parser.add_argument('username', help='Account username')
+    parser.add_argument('password', help='Account password')
+    parser.add_argument('destinationLogin', help='Destination account username')
+
+    creds = parser.parse_args()
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -26,10 +32,10 @@ async def main():
         await page.mouse.click(1092, 669)
         await page.wait_for_timeout(2000)
 
-        await page.keyboard.type(creds['username'])
+        await page.keyboard.type(creds.username)
         await page.keyboard.press("Enter")
         await page.wait_for_timeout(1000)
-        await page.keyboard.type(creds['password'])
+        await page.keyboard.type(creds.password)
         await page.keyboard.press("Enter")
         await page.wait_for_timeout(7000)
 
@@ -49,7 +55,7 @@ async def main():
         await page.mouse.click(1175, 260)
         await page.mouse.click(1175, 260)
         await page.wait_for_timeout(1000)
-        await page.keyboard.type(creds['destinationLogin'])
+        await page.keyboard.type(creds.destinationLogin)
         await page.keyboard.press("Enter")
         await page.wait_for_timeout(1000)
         
