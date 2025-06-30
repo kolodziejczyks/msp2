@@ -3,7 +3,7 @@ from playwright.async_api import async_playwright
 import cv2
 import json
 import argparse
-# import numpy
+import numpy
 
 async def take_and_read(page, path):
     await page.screenshot(path=path)
@@ -23,6 +23,8 @@ async def main():
         await page.goto("https://moviestarplanet2.com")
         await page.wait_for_timeout(8000)
 
+        print(creds.username)
+
         # Step 1: Click "Zagraj teraz"
         await page.click("#playButton")
         await page.wait_for_timeout(16000)
@@ -40,6 +42,10 @@ async def main():
         await page.wait_for_timeout(7000)
 
         await page.wait_for_timeout(7000)
+
+        await page.screenshot(
+            path="after_login.png"
+        )
 
         # friends
         await page.mouse.click(375, 50)
@@ -70,25 +76,20 @@ async def main():
         await page.wait_for_timeout(1000)
 
         #graf machen
-        properx = 1080
+        properx = 1130
         propery = 330
-        await page.mouse.click(properx, propery)
-        await page.mouse.click(properx, propery)
+        await page.mouse.click(1130, 330)
+        await page.mouse.click(1130, 330)
         await page.wait_for_timeout(1000)
 
-        # screenshot_bytes = await page.screenshot()
-        # nparr = numpy.frombuffer(screenshot_bytes, numpy.uint8)
-        # image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        screenshot_bytes = await page.screenshot()
+        nparr = numpy.frombuffer(screenshot_bytes, numpy.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
-        # # Draw small red dot at click coordinates
-        # cv2.circle(image, (properx,  propery), 10, (0, 0, 255), -1)  # -1 fills the circle
+        # Draw small red dot at click coordinates
+        cv2.circle(image, (properx,  propery), 10, (0, 0, 255), -1)  # -1 fills the circle
         
-        # # Save
-        # cv2.imwrite("screenshot_with_dot.png", image)
-        # img = await take_and_read(page, "after_click.png")
-
-        # await page.screenshot(
-        #     path="after_click.png"
-        # )
+        # Save
+        cv2.imwrite(creds.username + ".png", image)
 
 asyncio.run(main())
