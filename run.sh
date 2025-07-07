@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd /Users/szymonkolodziejczyk/code/msp2
+
 JSON_FILE="credentials.json"
 
 echo "Processing credentials from $JSON_FILE..."

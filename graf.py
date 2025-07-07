@@ -20,15 +20,20 @@ async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page(viewport={"width": 1280, "height": 720})
-        await page.goto("https://moviestarplanet2.com")
-        await page.wait_for_timeout(8000)
+        await page.goto("https://moviestarplanet2.pl")
+
+        await page.wait_for_timeout(1000)
+
+        await page.reload(wait_until="networkidle")
 
         print(creds.username)
 
         # Step 1: Click "Zagraj teraz"
         await page.click("#playButton")
-        await page.wait_for_timeout(16000)
-
+        await page.wait_for_timeout(5000)
+        await page.screenshot(
+            path="play_button.png"
+        )
         # login
         await page.mouse.click(1092, 669)
         await page.mouse.click(1092, 669)
