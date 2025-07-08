@@ -30,7 +30,7 @@ async def main():
 
         # Step 1: Click "Zagraj teraz"
         await page.click("#playButton")
-        await page.wait_for_timeout(5000)
+        await page.wait_for_timeout(13000)
         await page.screenshot(
             path="play_button.png"
         )
@@ -87,14 +87,22 @@ async def main():
         await page.mouse.click(1130, 330)
         await page.wait_for_timeout(1000)
 
-        screenshot_bytes = await page.screenshot()
-        nparr = numpy.frombuffer(screenshot_bytes, numpy.uint8)
-        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        # Draw small red dot at click coordinates
-        cv2.circle(image, (properx,  propery), 10, (0, 0, 255), -1)  # -1 fills the circle
-        
-        # Save
-        cv2.imwrite(creds.username + ".png", image)
+        counter = 0
+
+        while counter < 10:
+            await page.mouse.click(1130, 330)
+            await page.mouse.click(1130, 330)
+            counter += 1
+            await page.wait_for_timeout(60000)
+
+            screenshot_bytes = await page.screenshot()
+            nparr = numpy.frombuffer(screenshot_bytes, numpy.uint8)
+            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            # Draw small red dot at click coordinates
+            cv2.circle(image, (properx,  propery), 10, (0, 0, 255), -1)  # -1 fills the circle
+            
+            # Save
+            cv2.imwrite(creds.username + ".png", image)
 
 asyncio.run(main())
