@@ -18,15 +18,61 @@ async def main():
     creds = parser.parse_args()
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page(viewport={"width": 1280, "height": 720})
-        await page.goto("https://moviestarplanet2.pl")
+        browser = await p.chromium.launch(
+        headless=True,
+        args=[
+            '--disable-blink-features=AutomationControlled',
+            '--disable-dev-shm-usage',
+            '--no-sandbox',
+            '--disable-extensions'
+        ])
+
+        context = await browser.new_context(
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            viewport={'width': 1280, 'height': 720},
+            extra_http_headers={
+            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"'
+            }
+        )
+
+        page = await context.new_page()
+
+        await page.add_init_script("""
+                Object.defineProperty(document, 'hidden', {
+                    get: () => false,
+                });
+                
+                Object.defineProperty(document, 'visibilityState', {
+                    get: () => 'visible',
+                });
+                
+                Object.defineProperty(document, 'hasFocus', {
+                    value: () => true,
+                });
+                
+                // Override Page Visibility API
+                document.addEventListener = new Proxy(document.addEventListener, {
+                    apply(target, thisArg, args) {
+                        if (args[0] === 'visibilitychange') {
+                            return; // Don't add visibility change listeners
+                        }
+                        return target.apply(thisArg, args);
+                    }
+                });
+            """)
+
+        # page = await browser.new_page(viewport={"width": 1280, "height": 720})
+        await page.goto("https://wwww.moviestarplanet2.pl")
 
         await page.wait_for_timeout(1000)
 
-        await page.reload(wait_until="networkidle")
-
         print(creds.username)
+
+        await page.screenshot(
+            path="before_play_button.png"
+        )
 
         # Step 1: Click "Zagraj teraz"
         await page.click("#playButton")
@@ -34,6 +80,38 @@ async def main():
         await page.screenshot(
             path="play_button.png"
         )
+
+        try:
+            # Extract window.nebula object
+            nebula_data = await page.evaluate('() => window.nebula')
+            
+            # Write to log file with timestamp
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f'nebula_log_{timestamp}.json'
+            
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(nebula_data, f, indent=2, ensure_ascii=False)
+            
+            print(f"window.nebula successfully copied to {filename}")
+            
+        except Exception as e:
+            print(f"Error extracting window.nebula: {e}")
+            
+            # Fallback: check if window.nebula exists and log its type
+            try:
+                nebula_exists = await page.evaluate('() => typeof window.nebula')
+                print(f"window.nebula type: {nebula_exists}")
+                
+                if nebula_exists != 'undefined':
+                    # Try to get it as string
+                    nebula_str = await page.evaluate('() => JSON.stringify(window.nebula)')
+                    with open(f'nebula_log_{timestamp}.txt', 'w', encoding='utf-8') as f:
+                        f.write(nebula_str)
+                    print(f"window.nebula copied as string to nebula_log_{timestamp}.txt")
+            except Exception as e2:
+                print(f"Failed to extract window.nebula: {e2}")
+
         # login
         await page.mouse.click(1092, 669)
         await page.mouse.click(1092, 669)
